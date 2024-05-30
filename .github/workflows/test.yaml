@@ -1,0 +1,35 @@
+name: Sync Develop to UAT
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: deploy/uat
+
+      - name: Git Settings
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Push changes to deploy/uat branch
+        run: |
+          git fetch origin
+          git merge origin/develop
+          git push origin deploy/uat
+
+      # send message to dev-ops-indo if prev job err
+      - name: notify conflict
+        if: failure()
+        run: |
+            echo "conflict"
+            curl -X POST --data-urlencode "payload={\"channel\": \"D0657L1J388\", \"username\": \"Wallex DevOps Team\", \"text\": \"push failed\", \"icon_emoji\": \":spongebobthumbsup:\"}" https://hooks.slack.com/services/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
